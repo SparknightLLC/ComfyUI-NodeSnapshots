@@ -15,6 +15,7 @@ test("requested defaults and Debug grouping preserve saved user values", async (
 	assert.equal(settings.links_overscan_px, 1024);
 	assert.equal(settings.cache_while_idle, true);
 	assert.equal(settings.links_cache_while_idle, false);
+	assert.equal(settings.simplify_navigation, false);
 	assert.equal(registered.get("NodeSnapshot.cache_while_idle").name, "Show node snapshots while idle");
 	assert.equal(settings.exclude_pinned, false);
 	assert.equal(settings.release_while_executing, false);

@@ -76,3 +76,34 @@ test("executing nodes stay live so progress bars are never baked into images", (
 	assert.equal(cache.needs_live({ progress: undefined }), false);
 	assert.equal(cache.needs_live({ has_errors: true }), true);
 });
+
+test("navigation simplification raises the LOD threshold and always restores it", () =>
+{
+	const cache = Object.create(LegacyCache.prototype);
+	cache.settings = { simplify_navigation: true };
+	cache.is_enabled = () => true;
+	cache.is_interacting = () => true;
+	cache.saved_lod = null;
+	cache.lod_timer = null;
+	cache.canvas = { min_font_size_for_lod: 8, setDirty() { this.redraws = (this.redraws ?? 0) + 1; } };
+	cache.update_navigation_lod();
+	assert.equal(cache.canvas.min_font_size_for_lod, 9999);
+	cache.release_navigation_lod();
+	assert.equal(cache.canvas.min_font_size_for_lod, 8, "The previous threshold is restored");
+	assert.equal(cache.canvas.redraws, 1, "Restoring repaints the now-live nodes");
+
+	cache.is_interacting = () => false;
+	cache.update_navigation_lod();
+	assert.equal(cache.canvas.min_font_size_for_lod, 8, "Idle frames keep the native threshold");
+
+	cache.is_interacting = () => true;
+	cache.canvas.min_font_size_for_lod = 9999;
+	cache.update_navigation_lod();
+	cache.release_navigation_lod();
+	assert.equal(cache.canvas.min_font_size_for_lod, 9999, "Another extension's override is left alone");
+
+	cache.settings.simplify_navigation = false;
+	cache.canvas.min_font_size_for_lod = 8;
+	cache.update_navigation_lod();
+	assert.equal(cache.canvas.min_font_size_for_lod, 8, "Turning the setting off drops the override");
+});

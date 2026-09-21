@@ -5,6 +5,12 @@ const MIB = 1024 * 1024;
 const PADDING = 24;
 const ZOOM_SETTLE_MS = 180;
 const SIGNATURE_INTERVAL_MS = 100;
+const NAVIGATION_LOD_RELEASE_MS = 240;
+// Raising this threshold keeps LiteGraph's low-quality path active, which skips
+// node titles, widget text, badges, and shadows and hides zoom-sensitive DOM
+// widgets. Captures clear the low-quality flag themselves, so stored images
+// keep full detail.
+const NAVIGATION_FONT_SIZE_LOD = 9999;
 const CANVAS_STATE = [
 	"font", "textAlign", "textBaseline", "direction", "fontKerning",
 	"fontStretch", "fontVariantCaps", "letterSpacing", "wordSpacing",
@@ -56,6 +62,8 @@ export class LegacyCache
 		this.scheduler = new CaptureScheduler(settings, () => this.can_capture());
 		this.excluded = new Set();
 		this.recent = new WeakMap();
+		this.saved_lod = null;
+		this.lod_timer = null;
 		this.configure();
 		const owner = this;
 		this.draw_wrapper = function (...args)
@@ -127,6 +135,7 @@ export class LegacyCache
 				if (!node.graph || node.graph.getNodeById(node.id) !== node) this.cache.delete(node);
 			}
 		}
+		this.update_navigation_lod();
 	}
 
 	is_enabled()
@@ -164,6 +173,47 @@ export class LegacyCache
 	{
 		return Boolean(this.canvas.dragging_canvas || this.canvas.isDragging || this.canvas.resizing_node
 			|| this.canvas.resizingGroup || performance.now() < this.zooming_until);
+	}
+
+	// Nodes that stay live during navigation pay for their own titles, widget
+	// values, badges, and shadows on every frame. Holding LiteGraph in its
+	// low-quality path for the gesture removes that work, including DOM widgets
+	// that opted into hiding at low detail. Only the movement is affected: no
+	// capture can start while a gesture is in progress, and capture() clears the
+	// low-quality flag while it draws.
+	update_navigation_lod()
+	{
+		if (!this.settings.simplify_navigation || !this.is_enabled() || !this.is_interacting())
+		{
+			this.release_navigation_lod();
+			return;
+		}
+		if (this.saved_lod === null)
+		{
+			const current = this.canvas.min_font_size_for_lod;
+			// Leave a threshold another extension or the user already raised.
+			if (current === undefined || current >= NAVIGATION_FONT_SIZE_LOD) return;
+			this.saved_lod = current;
+			this.canvas.min_font_size_for_lod = NAVIGATION_FONT_SIZE_LOD;
+		}
+		clearTimeout(this.lod_timer);
+		this.lod_timer = setTimeout(() =>
+		{
+			this.lod_timer = null;
+			// An interaction can outlast several frames on a slow graph.
+			if (this.is_interacting()) this.update_navigation_lod();
+			else this.release_navigation_lod();
+		}, NAVIGATION_LOD_RELEASE_MS);
+	}
+
+	release_navigation_lod()
+	{
+		clearTimeout(this.lod_timer);
+		this.lod_timer = null;
+		if (this.saved_lod === null) return;
+		this.canvas.min_font_size_for_lod = this.saved_lod;
+		this.saved_lod = null;
+		this.canvas.setDirty(true, false);
 	}
 
 	needs_live(node)
@@ -372,6 +422,7 @@ export class LegacyCache
 
 	dispose()
 	{
+		this.release_navigation_lod();
 		this.clear();
 		if (this.canvas.draw === this.draw_wrapper) this.canvas.draw = this.original_draw;
 		if (this.canvas.drawNode === this.node_wrapper) this.canvas.drawNode = this.original_node;

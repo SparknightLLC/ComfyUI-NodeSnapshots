@@ -1,6 +1,7 @@
 const SETTINGS = [
 	["enabled", "General", "Enable NodeSnapshots", true, "Enable the selected renderer optimizations."],
 	["legacy_enabled", "Legacy", "Enable Legacy snapshots", true, "Build node images while idle and reuse them during panning, zooming, dragging, and resizing. Turning this off disables Legacy capture and reuse completely."],
+	["simplify_navigation", "Legacy", "Simplify live nodes during navigation", false, "Draw live nodes through LiteGraph's low-quality path while panning, zooming, dragging, and resizing: node titles, widget text, badges, and shadows are skipped, and zoom-sensitive DOM widgets are hidden. Snapshots keep full detail, so this only speeds up the nodes that stay live, such as ones with custom DOM widgets or media previews. Requires Enable Legacy snapshots."],
 	["cache_while_idle", "Snapshots", "Show node snapshots while idle", true, "Also reuse images outside navigation. Hovered, selected, edited, preview, and executing nodes stay live. Custom drawing callbacks may need an exclusion."],
 	["mark_cached", "Debug", "Mark cached nodes (camera)", false, "Bake a camera icon in the theme's primary accent color into each snapshot. Only image reuse shows the icon, with no additional per-frame drawing. Changing this setting rebuilds the cache; allow it to warm before measuring."],
 	["memory_mb", "Snapshots", "Bitmap memory budget (MiB)", 256, "Budget for RGBA pixels, including a capture in progress. Browser overhead is additional. Least recently used images are evicted.", 8, 1024, 8],

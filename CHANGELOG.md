@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-<details open><summary>0.1.1 - 18 September 2026</summary>
+<details open><summary>0.1.2 - 21 September 2026</summary>
+
+### Added
+
+- Added **Simplify live nodes during navigation**, which holds LiteGraph in its low-quality path while panning, zooming, dragging, and resizing. Live nodes skip titles, widget text, badges, and shadows, and zoom-sensitive DOM widgets hide, the same lever PanTextHider pulls in Legacy. Snapshots keep full detail because capture clears the flag itself, and the previous threshold returns as soon as the movement stops.
+
+</details>
+
+<details><summary>0.1.1 - 18 September 2026</summary>
 
 ### Improved
 

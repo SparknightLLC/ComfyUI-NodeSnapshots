@@ -1,6 +1,6 @@
 # ComfyUI-NodeSnapshots
 
-Version **0.1.1** · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)
+Version **0.1.2** · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)
 
 https://github.com/user-attachments/assets/76b612bd-ea09-4bff-b314-f8e5c09d2dd0
 
@@ -33,6 +33,8 @@ Other extensions that replace the same drawing methods may interact with NodeSna
 - Captures are scheduled in small batches. There is no full-graph capture, image encoding, or pixel-read validation.
 - Images stay in memory, with least-recently-used eviction. There is no disk cache or initial blocking capture. **Precache offscreen nodes** applies to both renderers and defaults to off. Visible nodes take priority; optional offscreen preparation uses spare bitmap capacity without evicting visible images. Nodes 2.0 can only capture mounted DOM nodes.
 - Slow or failing nodes stay live for the rest of their object lifetime. Custom drawing may have unreported dependencies or side effects; add problematic node types to the exclusion setting.
+
+**Simplify live nodes during navigation** keeps LiteGraph's low-quality path active for the duration of a pan, zoom, drag, or resize. Node titles, widget text, badges, and shadows are skipped, and DOM widgets that hide at low detail disappear. Everything that cannot be snapshotted benefits, including custom nodes with DOM widgets or media previews, hovered and selected nodes, and nodes whose images have not been captured yet, which is the effect PanTextHider provides. Stored images are unaffected: capture clears the low-quality flag itself, and no capture starts while a gesture is in progress. The previous threshold returns when the movement stops, and a threshold that you or another extension already raised is left untouched.
 
 By default, node snapshots also appear while idle. Turn **Show node snapshots while idle** off for navigation-only reuse. Custom drawing callbacks that perform updates may require exclusion; **Exclude pinned nodes** lets you keep individual problem nodes live without excluding their whole type. The idle refresh interval schedules replacements for aged images without discarding them mid-interaction; `0` disables periodic refresh. Content edits invalidate the affected node within the navigation check described above, or immediately at any other time. Custom animations and undeclared dependencies can linger through a long interaction, and a node that only changes appearance during a run is no longer masked by an execution-wide clear; exclude those node types. Oversized nodes remain live.
 
@@ -82,6 +84,7 @@ On the standard canvas layout, cached links occupy a separate browser-composited
 | --- | --- | --- |
 | Enable NodeSnapshots | On | Master switch; turning it off releases images and removes DOM optimization styles. |
 | Enable Legacy snapshots | On | Enable Legacy capture and reuse. Off means no Legacy snapshots in any interaction mode. |
+| Simplify live nodes during navigation | Off | Apply LiteGraph's low-quality path to live Legacy nodes while panning, zooming, dragging, or resizing: titles, widget text, badges, and shadows are skipped, and zoom-sensitive DOM widgets hide. Snapshots keep full detail. |
 | Show node snapshots while idle | On | Also use snapshots when not panning, zooming, dragging, or resizing. |
 | Mark cached nodes (camera) | Off | Bake a visible debug marker into images; changing this setting rebuilds them. |
 | Bitmap memory budget | 256 MiB | RGBA pixel budget, including the next capture. Browser/GPU bookkeeping is extra. |
