@@ -8,7 +8,7 @@ An experimental frontend extension from Sparknight for smoother large-workflow n
 
 ComfyUI's frontend renders your visible links and nodes at all times. When you pan or drag in a congested graph, **it can easily drop your framerate to the single digits** - especially in Nodes 2.0.
 
-This extension replaces expensive computations with bitmap images of your nodes and links. Since the content of these objects are generally static, we can rely on image placeholders except when performing actions directly on an object.
+This extension replaces expensive computations with bitmap images of your nodes and links. Since the content of these objects is generally static, we can rely on image placeholders except when performing actions directly on an object.
 
 The performance improvement is substantial. In a ~350 node workflow, a busy section of the graph averaged 20 FPS, and it now averages around 60.
 
