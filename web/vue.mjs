@@ -10,8 +10,17 @@ const STYLE_TEXT = `
 .lg-node:has([data-testid="node-state-outline-overlay"]) [data-node-snapshot-body] {
 	content-visibility: visible;
 }
-[data-node-snapshot-navigation] .lg-node {
+[data-node-snapshot-navigation] .lg-node,
+[data-node-snapshot-no-shadows] .lg-node {
 	filter: none !important;
+}
+[data-node-snapshot-square] .lg-node > [data-testid="node-inner-wrapper"],
+[data-node-snapshot-square] .lg-node [data-testid^="node-header-"],
+[data-node-snapshot-square] .lg-node [data-testid^="node-body-"],
+[data-node-snapshot-square] .lg-node [data-testid="subgraph-enter-button"],
+[data-node-snapshot-square] .lg-node [data-testid="advanced-inputs-button"],
+[data-node-snapshot-square] .lg-node [data-testid="node-state-outline-overlay"] {
+	border-radius: 0 !important;
 }
 `;
 
@@ -79,6 +88,8 @@ export class VueOptimizer
 		if (!pane) return;
 		this.pane = pane;
 		document.head.append(this.style);
+		pane.toggleAttribute("data-node-snapshot-no-shadows", this.settings.no_shadows);
+		pane.toggleAttribute("data-node-snapshot-square", this.settings.square_corners);
 		if (this.settings.vue_enabled && CSS.supports("content-visibility", "auto"))
 		{
 			this.collect(pane);
@@ -138,6 +149,8 @@ export class VueOptimizer
 		this.pending.clear();
 		for (const body of this.bodies) this.release(body);
 		this.pane?.removeAttribute("data-node-snapshot-navigation");
+		this.pane?.removeAttribute("data-node-snapshot-no-shadows");
+		this.pane?.removeAttribute("data-node-snapshot-square");
 		this.pane = null;
 		this.style.remove();
 	}

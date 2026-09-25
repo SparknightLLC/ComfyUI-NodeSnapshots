@@ -36,7 +36,7 @@ export function node_signature(node, canvas)
 		(node.inputs ?? []).map((slot) => [slot.name, slot.label, slot.type, slot.link]),
 		(node.outputs ?? []).map((slot) => [slot.name, slot.label, slot.type, slot.links]),
 		widget_values, canvas.editor_alpha,
-		canvas.render_shadows, canvas.inner_text_font, canvas.title_text_font,
+		canvas.render_shadows, canvas.round_radius, canvas.inner_text_font, canvas.title_text_font,
 		canvas.node_title_color
 	]);
 }
@@ -64,6 +64,10 @@ export class LegacyCache
 		this.recent = new WeakMap();
 		this.saved_lod = null;
 		this.lod_timer = null;
+		this.saved_shadows = true;
+		this.shadows_applied = false;
+		this.saved_round_radius = 8;
+		this.corners_applied = false;
 		this.configure();
 		const owner = this;
 		this.draw_wrapper = function (...args)
@@ -94,12 +98,14 @@ export class LegacyCache
 		this.excluded = new Set(this.settings.excluded_types.split(",").map((name) => name.trim()).filter(Boolean));
 		if ((!this.settings.enabled || !this.settings.legacy_enabled)
 			&& (key === undefined || key === "enabled" || key === "legacy_enabled")
-			|| key === "pixel_ratio" || key === "max_dimension" || key === "mark_cached") this.clear("settings");
+			|| key === "pixel_ratio" || key === "max_dimension" || key === "mark_cached"
+			|| key === "no_shadows" || key === "square_corners") this.clear("settings");
 		if (key === "slow_capture_ms")
 		{
 			this.blocked = new WeakSet();
 			this.attempted = new WeakMap();
 		}
+		this.apply_appearance();
 		if (key === "excluded_types")
 		{
 			for (const node of this.cache.entries.keys())
@@ -136,6 +142,7 @@ export class LegacyCache
 			}
 		}
 		this.update_navigation_lod();
+		this.apply_appearance();
 	}
 
 	is_enabled()
@@ -214,6 +221,55 @@ export class LegacyCache
 		this.canvas.min_font_size_for_lod = this.saved_lod;
 		this.saved_lod = null;
 		this.canvas.setDirty(true, false);
+	}
+
+	// Shadows and corner rounding are canvas flags that KJNodes also sets, so
+	// remember what we replaced and put back only a value we set ourselves. The
+	// flags follow the classic renderer: Nodes 2.0 nodes are DOM, and the radius
+	// also rounds group containers, so Nodes 2.0 uses VueOptimizer's styles.
+	apply_appearance(release = false)
+	{
+		const active = !release && this.settings.enabled && !window.LiteGraph?.vueNodesMode;
+		let changed = false;
+		if (active && this.settings.no_shadows)
+		{
+			if (!this.shadows_applied)
+			{
+				this.saved_shadows = this.canvas.render_shadows;
+				this.shadows_applied = true;
+			}
+			if (this.canvas.render_shadows !== false)
+			{
+				this.canvas.render_shadows = false;
+				changed = true;
+			}
+		}
+		else if (this.shadows_applied)
+		{
+			if (this.canvas.render_shadows === false) this.canvas.render_shadows = this.saved_shadows;
+			this.shadows_applied = false;
+			changed = true;
+		}
+		if (active && this.settings.square_corners)
+		{
+			if (!this.corners_applied)
+			{
+				this.saved_round_radius = LiteGraph.ROUND_RADIUS;
+				this.corners_applied = true;
+			}
+			if (LiteGraph.ROUND_RADIUS !== 0)
+			{
+				LiteGraph.ROUND_RADIUS = 0;
+				changed = true;
+			}
+		}
+		else if (this.corners_applied)
+		{
+			if (LiteGraph.ROUND_RADIUS === 0) LiteGraph.ROUND_RADIUS = this.saved_round_radius;
+			this.corners_applied = false;
+			changed = true;
+		}
+		if (changed) this.canvas.setDirty(true, true);
 	}
 
 	needs_live(node)
@@ -423,6 +479,7 @@ export class LegacyCache
 	dispose()
 	{
 		this.release_navigation_lod();
+		this.apply_appearance(true);
 		this.clear();
 		if (this.canvas.draw === this.draw_wrapper) this.canvas.draw = this.original_draw;
 		if (this.canvas.drawNode === this.node_wrapper) this.canvas.drawNode = this.original_node;

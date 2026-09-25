@@ -23,6 +23,10 @@ test("requested defaults and Debug grouping preserve saved user values", async (
 	assert.equal(settings.idle_delay_ms, 50);
 	assert.equal(settings.max_age_ms, 0);
 	assert.equal(settings.vue_shadows, false);
+	assert.equal(settings.no_shadows, false);
+	assert.equal(settings.square_corners, false);
+	assert.equal(registered.get("NodeSnapshot.no_shadows").category[1], "Appearance");
+	assert.equal(registered.get("NodeSnapshot.square_corners").category[1], "Appearance");
 	assert.equal(settings.pixel_ratio, 0.5);
 	assert.equal(registered.get("NodeSnapshot.diagnostics").category[1], "Debug");
 	registered.get("NodeSnapshot.pixel_ratio").onChange(0.75);

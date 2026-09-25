@@ -2,7 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-<details open><summary>0.1.2 - 21 September 2026</summary>
+<details open><summary>0.3.0 - 25 September 2026</summary>
+
+### Added
+
+- Added an Appearance group with **Disable node shadows** and **Disable rounded corners**. Both default to off and apply to Legacy and Nodes 2.0: shadows and rounded shapes are removed at all times instead of only during navigation. Nodes 2.0 nodes are styled through the node pane, and the classic canvas uses LiteGraph's shadow flag and global corner radius, which KJNodes' performance menu also owns.
+- Rebuilt stored images when either appearance switch changes, and made the classic-canvas corner radius part of node image validation, so images captured before a corner change are no longer reused.
+
+</details>
+
+<details><summary>0.1.2 - 21 September 2026</summary>
 
 ### Added
 

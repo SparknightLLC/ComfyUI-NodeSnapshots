@@ -67,7 +67,8 @@ app.registerExtension({
 				links.blocked_signature = null;
 				if (key !== "links_cache_while_idle") links.clear();
 			}
-			if (key === "enabled" || key === "vue_enabled" || key === "vue_shadows") vue?.detach();
+			if (key === "enabled" || key === "vue_enabled" || key === "vue_shadows"
+				|| key === "no_shadows" || key === "square_corners") vue?.detach();
 			sync();
 			app.canvas?.setDirty(true, true);
 		});

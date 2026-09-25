@@ -167,7 +167,7 @@ export class DomSnapshotCache
 	configure(key)
 	{
 		if (["enabled", "vue_cache_enabled"].includes(key)) this.detach();
-		else if (["pixel_ratio", "max_dimension", "mark_cached", "slow_capture_ms"].includes(key)) this.clear();
+		else if (["pixel_ratio", "max_dimension", "mark_cached", "slow_capture_ms", "square_corners"].includes(key)) this.clear();
 		else if (["memory_mb", "excluded_types", "exclude_pinned", "capture_offscreen"].includes(key))
 		{
 			for (const record of this.records.values()) record.attempted = -1;

@@ -8,7 +8,7 @@ An experimental frontend extension from Sparknight for smoother large-workflow n
 
 ComfyUI's frontend renders your visible links and nodes at all times. When you pan or drag in a congested graph, **it can easily drop your framerate to the single digits** - especially in Nodes 2.0.
 
-This extension replaces expensive computations with bitmap images of your nodes and links. Since the content of these objects is generally static, we can rely on image placeholders except when performing actions directly on an object.
+This extension replaces expensive computations with bitmap images of your nodes and links. Since the content of these objects are generally static, we can rely on image placeholders except when performing actions directly on an object.
 
 The performance improvement is substantial. In a ~350 node workflow, a busy section of the graph averaged 20 FPS, and it now averages around 60.
 
@@ -58,7 +58,17 @@ The browser can skip offscreen body layout and paint. Vue reactivity, applicatio
 
 **Warm-up, not steady-state drawing, is the known weak point for Nodes 2.0.** Filling the cache means cloning and rasterizing every supported node, and while `content-visibility` is being applied the browser keeps reporting small body size changes, which discard images that were already captured and queue them again. Diagnostics show this as repeated `resize` invalidations in `vue.invalidations` and `vue.last_invalidation`, and captures keep accumulating on the same nodes for as long as the graph stays idle. On the benchmark workflow the dense view needed about 22 seconds of idle time to warm, and the whole-graph view still had roughly 100 of 344 nodes uncaptured when the 45-second cap stopped warm-up, so those frame rates are a lower bound. A future version should tolerate sub-pixel body size changes, stop retrying nodes that cannot be captured, and make the DOM structure check cheaper; once images are attached, drawing is no longer the expensive part.
 
-**Reduce shadows during navigation** temporarily removes node drop shadows during panning and zooming. The bitmap budget caps retained canvas pixel storage, not browser compositor allocations, temporary DOM/SVG data, font resources, or image-decoder memory. No new package or remote capture service is required.
+**Reduce shadows during navigation** temporarily removes node drop shadows during panning and zooming, and the Appearance setting **Disable node shadows** removes them at all times, which also drops the shadow that returns when movement stops. The bitmap budget caps retained canvas pixel storage, not browser compositor allocations, temporary DOM/SVG data, font resources, or image-decoder memory. No new package or remote capture service is required.
+
+## Appearance
+
+**Disable node shadows** and **Disable rounded corners** apply to both renderers and default to off. They do the same thing in each: node shadows and rounded shapes are removed at all times rather than only during navigation, which also removes that work from every frame.
+
+Nodes 2.0 nodes are DOM elements, so those settings put an attribute on the node pane and let CSS override the node's shadow filter and corner radii. That costs one style recalculation when the value changes, with no per-frame work and no canvas redraw. The classic canvas draws its own nodes, so there NodeSnapshots sets LiteGraph's `render_shadows` flag and the global `ROUND_RADIUS`, and only while the classic renderer is active: the radius also rounds group containers, and Nodes 2.0 handles its shapes through CSS.
+
+**KJNodes already offers both switches** in its Performance menu, so the classic-canvas half of these settings is redundant when KJNodes is already set that way, while the Nodes 2.0 half has no equivalent there. Leave one of the two packs in charge of shadows and corners on the classic canvas. NodeSnapshots remembers the value it replaced and restores it when the setting is turned off, leaves a value it did not set alone, and reapplies its own value if another extension changes the flag while the setting is on.
+
+Changing either setting rebuilds stored images, because the shadow and the corner shape are part of a captured image. Turning NodeSnapshots off returns both renderers to their native appearance.
 
 ### Capture speed
 
@@ -83,6 +93,8 @@ On the standard canvas layout, cached links occupy a separate browser-composited
 | Setting | Default | Purpose |
 | --- | --- | --- |
 | Enable NodeSnapshots | On | Master switch; turning it off releases images and removes DOM optimization styles. |
+| Disable node shadows | Off | Remove node shadows at all times in both renderers. The classic-canvas half duplicates KJNodes' setting of the same name. |
+| Disable rounded corners | Off | Draw nodes with square corners in both renderers; changing it rebuilds stored images. The classic-canvas half duplicates a KJNodes setting. |
 | Enable Legacy snapshots | On | Enable Legacy capture and reuse. Off means no Legacy snapshots in any interaction mode. |
 | Simplify live nodes during navigation | Off | Apply LiteGraph's low-quality path to live Legacy nodes while panning, zooming, dragging, or resizing: titles, widget text, badges, and shadows are skipped, and zoom-sensitive DOM widgets hide. Snapshots keep full detail. |
 | Show node snapshots while idle | On | Also use snapshots when not panning, zooming, dragging, or resizing. |

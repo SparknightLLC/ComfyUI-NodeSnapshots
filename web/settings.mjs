@@ -1,5 +1,7 @@
 const SETTINGS = [
 	["enabled", "General", "Enable NodeSnapshots", true, "Enable the selected renderer optimizations."],
+	["no_shadows", "Appearance", "Disable node shadows", false, "Remove node shadows at all times in both renderers, instead of only during Nodes 2.0 navigation. On the classic canvas this duplicates KJNodes' Disable node shadows; leave it enabled in one of the two."],
+	["square_corners", "Appearance", "Disable rounded corners", false, "Draw nodes with square corners in both renderers. On the classic canvas this duplicates KJNodes' Disable rounded corners; changing it rebuilds stored images."],
 	["legacy_enabled", "Legacy", "Enable Legacy snapshots", true, "Build node images while idle and reuse them during panning, zooming, dragging, and resizing. Turning this off disables Legacy capture and reuse completely."],
 	["simplify_navigation", "Legacy", "Simplify live nodes during navigation", false, "Draw live nodes through LiteGraph's low-quality path while panning, zooming, dragging, and resizing: node titles, widget text, badges, and shadows are skipped, and zoom-sensitive DOM widgets are hidden. Snapshots keep full detail, so this only speeds up the nodes that stay live, such as ones with custom DOM widgets or media previews. Requires Enable Legacy snapshots."],
 	["cache_while_idle", "Snapshots", "Show node snapshots while idle", true, "Also reuse images outside navigation. Hovered, selected, edited, preview, and executing nodes stay live. Custom drawing callbacks may need an exclusion."],

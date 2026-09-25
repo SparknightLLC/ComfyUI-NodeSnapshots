@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-nodesnapshots"
 description = "Individual node snapshots and bounded link caching for smoother ComfyUI workflow navigation."
-version = "0.1.2"
+version = "0.3.0"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE", "PHOSPHOR-LICENSE.txt"]
